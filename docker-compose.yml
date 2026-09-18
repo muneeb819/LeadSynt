@@ -1,0 +1,68 @@
+# LeadSynt — one project, three containers: database + redis + THE APP.
+#
+#   cp .env.example .env   # fill the 4 required secrets
+#   docker compose up --build
+#
+# The `leadsynt` service is a SINGLE image (root Dockerfile) that runs the
+# frontend, the API, the Celery worker and beat together on ONE port: 3000.
+# Only the MSSQL port (1433) and 3000 are published; the API itself is
+# loopback-only inside the container.
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: leadsynt-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Change%21Me-Strong"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Change%21Me-Strong' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: leadsynt-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  leadsynt:
+    build: .
+    image: leadsynt:latest
+    container_name: leadsynt
+    environment: &app_env
+      LEADSynt_ENVIRONMENT: production
+      LEADSynt_DEBUG: "false"
+      LEADSynt_LOG_JSON: "true"
+      LEADSynt_SECRET_KEY: ${LEADSynt_SECRET_KEY:?set a long random secret in .env}
+      LEADSynt_FRONTEND_URL: http://localhost:3000
+      LEADSynt_CORS_ORIGINS: ${LEADSynt_CORS_ORIGINS:-http://localhost:3000}
+      LEADSynt_DATABASE_URL: "mssql+pyodbc://sa:Change%21Me-Strong@db:1433/LeadSynt?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+      LEADSynt_REDIS_URL: redis://redis:6379/0
+      LEADSynt_CELERY_BROKER_URL: redis://redis:6379/1
+      LEADSynt_CELERY_RESULT_BACKEND: redis://redis:6379/2
+      LEADSynt_ALLOW_SELF_REGISTRATION: "false"
+      LEADSynt_SEED_ADMIN_EMAIL: ${LEADSynt_SEED_ADMIN_EMAIL:-admin@leadsynt.local}
+      LEADSynt_SEED_ADMIN_PASSWORD: ${LEADSynt_SEED_ADMIN_PASSWORD:?set in .env}
+      LEADSynt_WEBHOOK_SHARED_SECRET: ${LEADSynt_WEBHOOK_SHARED_SECRET:?set in .env}
+      LEADSynt_AI_API_KEY: ${LEADSynt_AI_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+volumes:
+  mssql-data:

@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scrollbar-color: #3f3f46 transparent;
+}
+
+body {
+  @apply bg-zinc-950 text-zinc-200 antialiased;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Subtle grid background for the control center */
+.shell-bg {
+  background-image: radial-gradient(circle at 20% 0%, rgba(99, 102, 241, 0.06), transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.05), transparent 35%);
+}

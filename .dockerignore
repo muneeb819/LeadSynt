@@ -1,0 +1,15 @@
+# Keep the build context small — no venvs, node_modules, or local data
+backend/.venv
+backend/.pytest_cache
+backend/__pycache__
+backend/**/__pycache__
+backend/.env
+frontend/node_modules
+frontend/.next
+database/dev
+.env
+.git
+docs
+tests
+infrastructure
+*.md
