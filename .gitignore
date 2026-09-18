@@ -34,3 +34,6 @@ database/dev/
 .DS_Store
 .idea/
 .vscode/
+
+# Celery beat schedule (local runtime state)
+celerybeat-schedule*
