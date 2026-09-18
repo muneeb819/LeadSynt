@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/state/auth-context";
 import { Preloader } from "@/components/Preloader";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "LeadSynt — Control Center",
@@ -44,6 +45,7 @@ export default function RootLayout({
           {children}
           <Preloader />
         </AuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
