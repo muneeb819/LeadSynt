@@ -76,6 +76,11 @@ foreach ($r in $results) {
             "         checks: db=$($json.checks.database) redis=$($json.checks.redis)"
         }
     }
+    elseif ($r.HttpStatus -eq 500 -and $r.Body -match "startup_config_error") {
+        $j = $r.Body | ConvertFrom-Json
+        "FAIL    $label -> HTTP 500 startup config error: $($j.error.message)"
+        $overall = 1
+    }
     elseif ($r.Body -match "FUNCTION_INVOCATION_FAILED" -or ($r.HttpStatus -ge 500)) {
         $why = if ($r.Body -match "FUNCTION_INVOCATION_FAILED") { "FUNCTION_INVOCATION_FAILED" } else { "cold-start error" }
         "FAIL    $label -> HTTP $($r.HttpStatus) serverless invocation crashed ($why)"

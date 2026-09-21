@@ -5,6 +5,7 @@ Frontend -> this API -> database. No other path to data exists.
 
 from __future__ import annotations
 
+import json
 import logging
 from contextlib import asynccontextmanager
 
@@ -156,4 +157,38 @@ def create_app() -> FastAPI:
     return app
 
 
-app = create_app()
+def _startup_error_app(exc: Exception):
+    """Minimal ASGI app served when the application cannot start (e.g. an
+    invalid environment variable). Vercel crashes invisibly at cold start with
+    opaque FUNCTION_INVOCATION_FAILED otherwise; this returns a clear
+    startup_config_error payload on every request so the misconfiguration is
+    actionable instead of silent."""
+    message = f"{type(exc).__name__}: {exc}"
+
+    async def _app(scope, receive, send):
+        if scope["type"] != "http":
+            await send({"type": "lifespan.startup.complete"})
+            return
+        payload = json.dumps(
+            {"error": {"code": "startup_config_error", "message": message}}
+        ).encode("utf-8")
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 500,
+                "headers": [
+                    (b"content-type", b"application/json; charset=utf-8"),
+                    (b"content-length", str(len(payload)).encode()),
+                ],
+            }
+        )
+        await send({"type": "http.response.body", "body": payload})
+
+    return _app
+
+
+try:
+    app = create_app()
+except Exception as exc:  # noqa: BLE001 - never mask a startup config error
+    logging.getLogger("leadsynt").exception("startup failed; serving error app")
+    app = _startup_error_app(exc)
