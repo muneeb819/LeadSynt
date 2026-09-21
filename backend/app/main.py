@@ -187,8 +187,15 @@ def _startup_error_app(exc: Exception):
     return _app
 
 
-try:
-    app = create_app()
-except Exception as exc:  # noqa: BLE001 - never mask a startup config error
-    logging.getLogger("leadsynt").exception("startup failed; serving error app")
-    app = _startup_error_app(exc)
+def _build_app():
+    """Construct the ASGI app, falling back to a self-describing error app if
+    startup fails (e.g. an invalid environment variable) so deployments report
+    the misconfiguration instead of crashing invisibly at cold start."""
+    try:
+        return create_app()
+    except Exception as exc:  # noqa: BLE001 - never mask a startup config error
+        logging.getLogger("leadsynt").exception("startup failed; serving error app")
+        return _startup_error_app(exc)
+
+
+app = _build_app()
