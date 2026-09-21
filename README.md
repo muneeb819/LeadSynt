@@ -1,5 +1,7 @@
 # LeadSynt
 
+![CI](https://github.com/muneeb819/LeadSynt/actions/workflows/ci.yml/badge.svg)
+
 **Event-driven sales-intelligence platform.** Requirements and RFQs from
 compliant sources enter as tickets, flow through an audited pipeline
 (discovery → verification → scoring → outreach → human handover), and become
