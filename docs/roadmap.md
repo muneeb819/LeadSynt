@@ -26,15 +26,23 @@
   dashboard with budget bars, run control and provider/model catalog
 - Frontend: login + 16 working pages on real API data
 - Tests: 70 backend tests + 24-check E2E; docs; README
+- **Phase B complete**: outreach engine — `outreach_messages` +
+  `outreach_templates` + `follow_up_rules` + `outreach_follow_up_authorizations`
+  schema (migration `b0a1e2f3c4d5`); email channel adapter (`log` transport
+  marks QUEUED without ever claiming external delivery; SMTP transport is real
+  and only used when configured); deterministic template library seeded at
+  startup (`email-sequence-1..3`) with UNKNOWN-over-guess rendering and a
+  mandatory opt-out footer; mandatory send-time gatechain re-checked live on
+  every send (suppression → consent → reply-pause/handover → daily cap →
+  quiet hours, each BLOCKED state audited `outreach.blocked:<reason>`); reply
+  routing hardening (`/webhooks/reply` resolves by ticket/thread/sender, honors
+  explicit opt-outs as audited suppressions, rejects unsupported channels);
+  follow-up rules with explicit human authorization
+  (`POST /outreach/follow-ups/authorize`, audited, `sequence <= max_follow_ups`);
+  `outreach-ai` agent (read-only drafts + live suppression re-check); Celery
+  `leadsynt.outreach.send_due`; outreach API + RBAC (`outreach:read/send/manage`)
 
 ## Next phases (interfaces ready, implementation pending)
-
-### Phase B — Outreach engine
-1. Channel adapters (email first) behind the existing `outreach_messages`.
-2. Template library + consent/suppression re-check at send time
-   (suppression gate already enforced).
-3. Reply routing hardening (multi-platform), follow-up rules with explicit
-   human authorization (handover rule already blocks auto-follow-up).
 
 ### Phase C — Marketplace
 1. Publishing workflow for `marketplace_items` (currently read surface).

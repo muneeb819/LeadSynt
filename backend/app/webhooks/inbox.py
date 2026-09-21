@@ -1,29 +1,32 @@
 """Inbound reply webhook — the entry point of the CRITICAL handover rule.
 
 Flow: signature verification (HMAC-SHA256, timestamp-bounded) -> record
-webhook event -> load ticket -> handover service (pause automation, record
-verbatim message, transition to REPLIED/HOT_LEAD, dossier, notify owner).
+webhook event -> route the reply (Phase B: resolve the ticket by ticket_id /
+outbound thread reference / sender identity, validate the channel, honor
+explicit opt-outs as audited suppressions) -> handover service (pause
+automation, record verbatim message, transition to REPLIED/HOT_LEAD,
+dossier, notify owner).
 
 Invalid signatures are rejected with 401 AND recorded (signature_verified
-=False, status=FAILED) so abuse attempts are visible.
+=False, status=FAILED) so abuse attempts are visible. Unresolvable replies
+(or unsupported channels) are recorded as FAILED with the reason.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.config import get_settings
-from app.core.exceptions import BadRequestError, NotFoundError, UnauthorizedError
+from app.core.exceptions import AppError, BadRequestError, UnauthorizedError
 from app.models.ops import WebhookEvent
-from app.models.ticket import Ticket
+from app.outreach.reply_router import route_reply
 from app.security import verify_signature
-from app.services import handover_service
 from app.services.audit_service import audit
 
 logger = logging.getLogger("leadsynt.webhooks")
@@ -43,8 +46,6 @@ async def reply_webhook(request: Request, db: Session = Depends(get_db)):
 
     data = {}
     if body:
-        import json
-
         try:
             data = json.loads(body)
         except json.JSONDecodeError:
@@ -69,36 +70,39 @@ async def reply_webhook(request: Request, db: Session = Depends(get_db)):
         db.commit()
         raise UnauthorizedError("Webhook signature verification failed")
 
-    ticket_id = data.get("ticket_id")
     message = data.get("message")
-    if not ticket_id or not message:
+    if not message:
         event.status = "FAILED"
-        event.error = "missing ticket_id or message"
+        event.error = "missing message"
         db.commit()
-        raise BadRequestError("Webhook payload requires ticket_id and message")
+        raise BadRequestError("Webhook payload requires a message")
 
-    ticket = db.get(Ticket, ticket_id)
-    if ticket is None:
+    try:
+        routed = route_reply(
+            db,
+            message=str(message),
+            sender=data.get("sender"),
+            channel=data.get("channel", "email"),
+            thread_id=data.get("thread_id") or data.get("message_id"),
+            message_id=data.get("message_id"),
+            contact_id=data.get("contact_id"),
+            ticket_id=data.get("ticket_id"),
+            source=source,
+        )
+    except AppError as exc:
         event.status = "FAILED"
-        event.error = f"unknown ticket {ticket_id}"
+        event.error = exc.message
         db.commit()
-        raise NotFoundError("Ticket not found", details={"ticket_id": ticket_id})
-
-    dossier = handover_service.handle_reply(
-        db,
-        ticket=ticket,
-        incoming_message=str(message),
-        sender=data.get("sender"),
-        contact_id=data.get("contact_id"),
-        channel=data.get("channel", "email"),
-        source=source,
-    )
+        raise
 
     event.status = "PROCESSED"
     event.processed_at = datetime.now(timezone.utc)
-    from app.queues.events import EventBus, EVENT_PROSPECT_REPLIED, EVENT_HANDOVER_CREATED
+    from app.queues.events import EVENT_HANDOVER_CREATED, EventBus
 
-    EventBus.publish(EVENT_PROSPECT_REPLIED, {"ticket_id": ticket.id})
-    EventBus.publish(EVENT_HANDOVER_CREATED, {"ticket_id": ticket.id})
+    EventBus.publish(EVENT_HANDOVER_CREATED, {"ticket_id": routed["ticket_id"]})
     db.commit()
-    return {"status": "processed", "ticket_id": ticket.id, "handover": dossier["suggested_next_action"]}
+    return {
+        "status": "processed",
+        "ticket_id": routed["ticket_id"],
+        "handover": routed.get("suggested_next_action"),
+    }

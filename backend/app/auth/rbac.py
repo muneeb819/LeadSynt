@@ -37,6 +37,7 @@ PERMISSIONS: list[tuple[str, str, str, str]] = [
     ("scoring:run", "scoring", "run", "Run scoring"),
     ("outreach:read", "outreach", "read", "View outreach state"),
     ("outreach:send", "outreach", "send", "Send outreach (gated by suppression)"),
+    ("outreach:manage", "outreach", "manage", "Manage outreach templates, follow-up rules and authorizations"),
     ("conversations:read", "conversations", "read", "View conversations"),
     ("deals:read", "deals", "read", "View deals"),
     ("deals:write", "deals", "write", "Create/update deals"),
@@ -63,12 +64,12 @@ ROLE_PERMISSIONS: dict[str, list[str] | "*"] = {
         "notifications:read", "settings:read", "users:read", "audit:read",
         "verification:run", "scoring:run", "tickets:write",
         "tickets:transition", "contacts:write", "companies:write",
-        "deals:write",
+        "deals:write", "outreach:manage",
     ],
     "operator": [
         "tickets:read", "tickets:write", "tickets:transition", "leads:read",
         "contacts:read", "contacts:write", "companies:read", "companies:write",
-        "sources:read", "outreach:read", "conversations:read", "deals:read",
+        "sources:read", "outreach:read", "outreach:send", "conversations:read", "deals:read",
         "notifications:read", "verification:run", "scoring:run",
     ],
     "viewer": [

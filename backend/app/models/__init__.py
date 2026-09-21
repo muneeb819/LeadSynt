@@ -33,3 +33,6 @@ from app.models.ops import (  # noqa: F401
     SuppressionRecord, SystemSetting, WebhookEvent,
 )
 from app.models.conversation import Conversation, ConversationMessage  # noqa: F401
+from app.models.outreach import (  # noqa: F401
+    FollowUpRule, OutreachFollowUpAuthorization, OutreachMessage, OutreachTemplate,
+)

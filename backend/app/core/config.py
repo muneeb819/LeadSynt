@@ -79,6 +79,13 @@ class Settings(BaseSettings):
     sms_provider: str = "none"
     sms_api_key: str = ""
 
+    # -- Outreach (Phase B) ----------------------------------------------------------
+    # "log" (default) records outbound attempts to the log without claiming
+    # external delivery; "smtp" performs real delivery via the SMTP settings.
+    outreach_email_transport: str = "log"
+    outreach_email_from: str = "outreach@leadsynt.local"
+    outreach_sender_name: str = "LeadSynt"
+
     # -- Verification providers ---------------------------------------------------
     verification_email_provider: str = "none"
     verification_phone_provider: str = "none"

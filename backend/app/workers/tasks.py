@@ -173,3 +173,23 @@ def refresh_freshness_task(self) -> dict:
         raise
     finally:
         db.close()
+
+
+@celery.task(name="leadsynt.outreach.send_due", bind=True)
+def outreach_send_due_task(self) -> dict:
+    """Deliver every due SCHEDULED outreach message through the full send-time
+    gatechain. Called on a schedule; a message that fails a gate is marked
+    BLOCKED (reason recorded + audited) and never silently skipped."""
+    from app.outreach.service import run_due
+
+    db = _session()
+    try:
+        result = run_due(db, actor_id=None, actor_type="system")
+        db.commit()
+        return result
+    except Exception as exc:  # noqa: BLE001
+        db.rollback()
+        logger.exception("outreach send-due failed")
+        raise
+    finally:
+        db.close()

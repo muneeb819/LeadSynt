@@ -15,6 +15,7 @@ from app.agents.extraction import ExtractionAgent
 from app.agents.fraud import FraudAuthenticityAgent
 from app.agents.intent import IntentAgent
 from app.agents.lead_scoring import LeadScoringAgent
+from app.agents.outreach import OutreachAgent
 from app.agents.verification import VerificationAgent
 from app.core.exceptions import NotFoundError
 
@@ -26,6 +27,7 @@ IMPLEMENTED_AGENTS: dict[str, type[AgentBase]] = {
     "fraud-authenticity-ai": FraudAuthenticityAgent,
     "entity-resolution-ai": EntityResolutionAgent,
     "lead-scoring-ai": LeadScoringAgent,
+    "outreach-ai": OutreachAgent,
 }
 
 

@@ -4,8 +4,8 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     admin, agents, analytics, auth, companies, connectors, contacts,
-    handover, health, leads, notifications, qa, scoring, settings, sources,
-    tickets, users, verification,
+    handover, health, leads, notifications, outreach, qa, scoring, settings,
+    sources, tickets, users, verification,
 )
 
 api_router = APIRouter()
@@ -22,6 +22,7 @@ api_router.include_router(verification.router, prefix="/verification", tags=["ve
 api_router.include_router(scoring.router, prefix="/scoring", tags=["scoring"])
 api_router.include_router(handover.router, prefix="/handover", tags=["handover"])
 api_router.include_router(agents.router, prefix="/agents", tags=["agents"])
+api_router.include_router(outreach.router, prefix="/outreach", tags=["outreach"])
 api_router.include_router(qa.router, prefix="/qa", tags=["qa"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(settings.router, prefix="/settings", tags=["settings"])

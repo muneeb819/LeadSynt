@@ -52,6 +52,7 @@ async def lifespan(app: FastAPI):
     from app.configuration import ensure_defaults
     from app.models.ticket import TicketStatus as TicketStatusRow
     from app.models.enums import TicketStatus
+    from app.outreach.templates import ensure_outreach_seeded
     from sqlalchemy import select
 
     db = SessionLocal()
@@ -60,6 +61,7 @@ async def lifespan(app: FastAPI):
         ensure_agents_seeded(db)
         ensure_ai_catalog_seeded(db)
         ensure_defaults(db)
+        ensure_outreach_seeded(db)
         have = {r.code for r in db.execute(select(TicketStatusRow)).scalars()}
         for st in TicketStatus:
             if st.value not in have:
