@@ -16,18 +16,18 @@
   (automation stop → REPLIED/HOT_LEAD → dossier → owner notification)
 - QA Master: deterministic sweep (10 categories) + findings API
 - AI agent framework: 12 agents registered, execution/audit/cost plumbing
+- **Phase A complete**: `ai_providers`/`ai_models` catalog (idempotent seed,
+  resolve_llm_config), six new agent engines (extraction, intent, verification,
+  enrichment, fraud & authenticity, entity resolution) — deterministic without
+  an API key, LLM-backed when `LEADSynt_AI_PROVIDER` is set, never fabricating
+  data; monthly budget caps (`monthly_budget_usd`, cancelled runs + audit);
+  run API (`POST /agents/{id}/run`) and per-agent dashboards
+  (`/agents/analytics`, `/agents/providers`, `/agents/models`); frontend agents
+  dashboard with budget bars, run control and provider/model catalog
 - Frontend: login + 16 working pages on real API data
 - Tests: 70 backend tests + 24-check E2E; docs; README
 
 ## Next phases (interfaces ready, implementation pending)
-
-### Phase A — AI implementations
-1. LLM provider integration behind `LEADSynt_AI_API_KEY` (providers/models
-   catalog tables exist).
-2. Extraction agent (fact + provenance per item), intent agent,
-   verification agent (evidence-backed), enrichment (licensed data).
-3. Fraud & authenticity agent; entity resolution with company-domain graph.
-4. Budget caps + per-agent dashboards (tables + API exist).
 
 ### Phase B — Outreach engine
 1. Channel adapters (email first) behind the existing `outreach_messages`.

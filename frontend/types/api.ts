@@ -143,6 +143,7 @@ export interface Agent {
   total_runs: number;
   total_cost_usd: number;
   max_cost_usd_per_run: number;
+  monthly_budget_usd: number;
 }
 
 export interface AgentRun {
@@ -151,11 +152,71 @@ export interface AgentRun {
   kind: string | null;
   ticket_id: string | null;
   confidence: number | null;
+  tokens_in: number;
+  tokens_out: number;
   cost_usd: number | null;
   error: string | null;
   output: Record<string, unknown> | null;
   started_at: string | null;
   finished_at: string | null;
+}
+
+export interface AgentAnalyticsItem {
+  agent: Agent;
+  runs: {
+    total: number;
+    completed: number;
+    failed: number;
+    cancelled: number;
+    avg_confidence: number | null;
+  };
+  cost: {
+    total_usd: number;
+    avg_per_run_usd: number;
+  };
+  budget: {
+    monthly_budget_usd: number;
+    spent_this_month_usd: number;
+    remaining_usd: number | null;
+    enforced: boolean;
+  };
+  trend_7d: Record<string, number>;
+  last_run_at: string | null;
+}
+
+export interface AgentAnalyticsResponse {
+  items: AgentAnalyticsItem[];
+  overall: {
+    agents: number;
+    runs: number;
+    failed: number;
+    total_cost_usd: number;
+    llm_configured: boolean;
+  };
+  generated_at: string;
+}
+
+export interface AIProviderOut {
+  id: string;
+  provider_id: string;
+  name: string;
+  kind: string;
+  base_url: string;
+  api_key_env: string | null;
+  is_default: boolean;
+  enabled: boolean;
+  model_count: number;
+}
+
+export interface AIModelOut {
+  id: string;
+  model_id: string;
+  provider_id: string | null;
+  display_name: string;
+  context_window: number;
+  input_price_per_mtok: number;
+  output_price_per_mtok: number;
+  enabled: boolean;
 }
 
 export interface QaFinding {

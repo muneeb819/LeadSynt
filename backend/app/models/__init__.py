@@ -24,7 +24,9 @@ from app.models.verification import (  # noqa: F401
 from app.models.scoring import (  # noqa: F401
     IntentScoreSnapshot, LeadScoreSnapshot, RiskScoreSnapshot,
 )
-from app.models.ai import AIAgent, AIDecision, AIEvidence, AIRun  # noqa: F401
+from app.models.ai import (  # noqa: F401
+    AIAgent, AIDecision, AIEvidence, AIModel, AIProvider, AIRun,
+)
 from app.models.qa import QAFinding, QARun, QAReport  # noqa: F401
 from app.models.ops import (  # noqa: F401
     AuditLog, ChangeRequest, ConsentRecord, Job, JobRun, Notification,

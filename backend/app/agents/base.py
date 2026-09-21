@@ -78,6 +78,28 @@ class AgentBase(ABC):
         )
         self.db.add(run)
         self.db.flush()
+        # Phase A: monthly budget cap. Blocked runs are CANCELLED, never
+        # charged, and never counted toward spend or totals.
+        agent_row = self.db.get(AIAgent, run.agent_id)
+        budget = float(agent_row.monthly_budget_usd or 0) if agent_row else 0.0
+        if budget > 0 and self._monthly_spend_usd(run.agent_id) >= budget:
+            run.status = RunStatus.CANCELLED
+            run.error = f"monthly budget of {budget:.2f} USD exhausted"
+            run.finished_at = datetime.now(timezone.utc)
+            audit(
+                self.db,
+                action=f"ai.run.blocked:budget:{self.spec.agent_id}",
+                actor_type="agent",
+                actor_id=self.spec.agent_id,
+                resource_type="ai_run",
+                resource_id=run.id,
+                after={"monthly_budget_usd": budget},
+            )
+            from app.queues.events import EventBus
+
+            EventBus.publish("ai.run.blocked", {"run_id": run.id, "agent": self.spec.agent_id})
+            self.db.flush()
+            return run
         try:
             result = self.execute(payload)
         except Exception as exc:  # noqa: BLE001 — record, don't hide
@@ -117,6 +139,24 @@ class AgentBase(ABC):
         )
         self.db.flush()
         return run
+
+    def _monthly_spend_usd(self, agent_row_id: str) -> float:
+        """Sum of this calendar month's charged (non-CANCELLED) run costs."""
+        from datetime import datetime, timezone
+
+        from sqlalchemy import func, select
+
+        month_start = datetime.now(timezone.utc).replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        total = self.db.execute(
+            select(func.coalesce(func.sum(AIRun.cost_usd), 0)).where(
+                AIRun.agent_id == agent_row_id,
+                AIRun.status != RunStatus.CANCELLED,
+                AIRun.created_at >= month_start,
+            )
+        ).scalar_one()
+        return float(total or 0)
 
     def _agent_row_id(self) -> str:
         from sqlalchemy import select

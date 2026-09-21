@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -38,6 +38,9 @@ class AIAgent(IDMixin, TimestampMixin, Base):
     )
     model: Mapped[str | None] = mapped_column(String(120), nullable=True)
     max_cost_usd_per_run: Mapped[float] = mapped_column(Numeric(10, 4), default=0.05, nullable=False)
+    # 0.0 = unlimited. Enforced in AgentBase.run (runs are CANCELLED / never
+    # charged once the current calendar month's spend reaches the cap).
+    monthly_budget_usd: Mapped[float] = mapped_column(Numeric(12, 2), default=0.0, nullable=False)
     total_runs: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     total_cost_usd: Mapped[float] = mapped_column(Numeric(14, 6), default=0.0, nullable=False)
 
@@ -85,3 +88,35 @@ class AIEvidence(IDMixin, TimestampMixin, Base):
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     excerpt: Mapped[str | None] = mapped_column(Text, nullable=True)
     weight: Mapped[float] = mapped_column(Numeric(5, 4), default=1.0, nullable=False)
+
+
+class AIProvider(IDMixin, TimestampMixin, Base):
+    """LLM provider catalog row (Phase A). Rows are seeded at startup and
+    reference an env var (never a literal key) for the API credential."""
+
+    __tablename__ = "ai_providers"
+
+    provider_id: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    kind: Mapped[str] = mapped_column(String(32), default="openai_compatible", nullable=False)
+    base_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    api_key_env: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class AIModel(IDMixin, TimestampMixin, Base):
+    """LLM model catalog row with per-Mtok list price (used for cost
+    estimates and budget enforcement even before a key is configured)."""
+
+    __tablename__ = "ai_models"
+
+    model_id: Mapped[str] = mapped_column(String(120), unique=True, index=True, nullable=False)
+    provider_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("ai_providers.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    display_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    context_window: Mapped[int] = mapped_column(Integer, default=8192, nullable=False)
+    input_price_per_mtok: Mapped[float] = mapped_column(Numeric(12, 6), default=0.0, nullable=False)
+    output_price_per_mtok: Mapped[float] = mapped_column(Numeric(12, 6), default=0.0, nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

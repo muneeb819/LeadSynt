@@ -161,6 +161,9 @@ AGENTS: list[AgentSpec] = [
 
 def ensure_agents_seeded(db: Session) -> None:
     """Idempotently seed the agent registry rows."""
+    from app.core.config import get_settings
+
+    default_budget = get_settings().ai_default_monthly_budget_usd
     for spec in AGENTS:
         row = db.execute(select(AIAgent).where(AIAgent.agent_id == spec.agent_id)).scalar_one_or_none()
         if row is None:
@@ -178,6 +181,7 @@ def ensure_agents_seeded(db: Session) -> None:
                     evidence_requirements=spec.evidence_requirements,
                     status=AgentStatus.ACTIVE,
                     model=None,
+                    monthly_budget_usd=default_budget,
                 )
             )
     db.flush()

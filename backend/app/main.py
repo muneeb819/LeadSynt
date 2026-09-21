@@ -47,6 +47,7 @@ async def lifespan(app: FastAPI):
 
     # Idempotent foundational seeding (RBAC, agents, settings defaults).
     from app.agents.registry import ensure_agents_seeded
+    from app.ai.catalog import ensure_ai_catalog_seeded
     from app.auth.rbac import ensure_rbac_seeded
     from app.configuration import ensure_defaults
     from app.models.ticket import TicketStatus as TicketStatusRow
@@ -57,6 +58,7 @@ async def lifespan(app: FastAPI):
     try:
         ensure_rbac_seeded(db)
         ensure_agents_seeded(db)
+        ensure_ai_catalog_seeded(db)
         ensure_defaults(db)
         have = {r.code for r in db.execute(select(TicketStatusRow)).scalars()}
         for st in TicketStatus:

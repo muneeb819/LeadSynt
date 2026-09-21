@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     ai_model: str = ""
     ai_max_cost_per_run_usd: float = 0.05
     ai_max_tokens_per_run: int = 4000
+    # 0.0 = unlimited per agent; applied as each agent's monthly_budget_usd.
+    ai_default_monthly_budget_usd: float = 0.0
+    ai_llm_timeout_seconds: int = 60
 
     # -- Email / SMS -------------------------------------------------------------
     email_smtp_host: str = ""
