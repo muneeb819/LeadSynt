@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastapi",
+  "builds": [
+    {
+      "src": "app/main.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "20mb"
+      }
+    }
+  ],
+  "routes": [
+    { "src": ".*", "dest": "app/main.py" }
+  ]
+}
