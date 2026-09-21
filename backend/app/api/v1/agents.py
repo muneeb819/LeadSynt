@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, require_permission
 from app.ai.catalog import get_model_rows, get_provider_rows
 from app.core.exceptions import NotFoundError
-from app.models.ai import AIAgent, AIDecision, AIEvidence, AIModel, AIProvider, AIRun
+from app.models.ai import AIAgent, AIDecision, AIEvidence, AIModel, AIRun
 from app.schemas.agents import AgentRunRequest
 from app.schemas.common import Envelope
 
@@ -121,7 +121,7 @@ def agent_analytics(
         last_finished = db.execute(
             select(AIRun.finished_at).where(AIRun.agent_id == a.id)
             .order_by(AIRun.finished_at.desc()).limit(1)
-        ).scalar_one()
+        ).scalar_one_or_none()
         month_spend = db.execute(
             select(func.coalesce(func.sum(AIRun.cost_usd), 0)).where(
                 AIRun.agent_id == a.id, AIRun.status != "CANCELLED",

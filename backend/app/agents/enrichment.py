@@ -72,8 +72,10 @@ class EnrichmentAgent(AgentBase):
         company_url = company.website or (f"https://{company.domain}" if company.domain else None)
         for name in ("official_website", "domain", "industry", "size_band", "country",
                      "employee_count", "verified_company"):
-            value = getattr(company, name, None)
-            if value not in (None, "", False) or name == "verified_company":
+            # official_website maps to the stored authorized website field;
+            # unknown/absent fields stay UNKNOWN — never fabricated.
+            value = company.website if name == "official_website" else getattr(company, name, None)
+            if value not in (None, "", False):
                 add(name, value, "stored_company_record", company.id)
 
         # Computed consistency: contact email domain vs company domain vs
