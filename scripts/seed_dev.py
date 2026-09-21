@@ -160,7 +160,7 @@ def main() -> None:
             runner = DevFeedConnector(db, conn)
             run = runner.run(trigger="seed")
             rows = db.execute(_sel(SourceRecord).where(
-                SourceRecord.source_id == src.id, SourceRecord.is_consumed.is_(False)
+                SourceRecord.source_id == src.id, SourceRecord.is_consumed == False
             )).scalars().all()
             raw = [
                 __import__("app.connectors.base", fromlist=["RawRecord"]).RawRecord(

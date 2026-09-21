@@ -23,7 +23,7 @@ def list_notifications(
 ):
     filters = [Notification.user_id == user.id]
     if unread_only:
-        filters.append(Notification.is_read.is_(False))
+        filters.append(Notification.is_read == False)
     total = db.execute(
         select(func.count()).select_from(Notification).where(*filters)
     ).scalar_one()

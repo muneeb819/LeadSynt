@@ -37,7 +37,7 @@ def run_connector(db: Session, *, connector_key: str, trigger: str = "manual") -
         records = db.execute(
             select(SourceRecord).where(
                 SourceRecord.source_id == connector.source_id,
-                SourceRecord.is_consumed.is_(False),
+                SourceRecord.is_consumed == False,
             )
         ).scalars().all()
         raw = [

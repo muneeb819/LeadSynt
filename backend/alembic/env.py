@@ -32,7 +32,7 @@ def _db_url() -> str:
     return url
 
 
-config.set_main_option("sqlalchemy.url", _db_url())
+config.set_main_option("sqlalchemy.url", _db_url().replace("%", "%%"))  # configparser interpolation
 
 
 def run_migrations_offline() -> None:

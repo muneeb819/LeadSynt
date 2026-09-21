@@ -79,7 +79,7 @@ def get_model(db: Session, model_id: str) -> AIModel | None:
 
 def default_model_for(db: Session, provider: AIProvider) -> AIModel | None:
     return db.execute(
-        select(AIModel).where(AIModel.provider_id == provider.id, AIModel.enabled.is_(True))
+        select(AIModel).where(AIModel.provider_id == provider.id, AIModel.enabled == True)
         .order_by(AIModel.input_price_per_mtok.asc()).limit(1)
     ).scalar_one_or_none()
 

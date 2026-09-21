@@ -38,7 +38,7 @@ def test_connector_run_creates_source_records(client, operator_headers, db_sessi
     runner = DevFeedConnector(db, conn)
     run = runner.run(trigger="test")
     records = db.execute(select(SourceRecord).where(
-        SourceRecord.source_id == src.id, SourceRecord.is_consumed.is_(False))).scalars().all()
+        SourceRecord.source_id == src.id, SourceRecord.is_consumed == False)).scalars().all()
     raw = [__import__("app.connectors.base", fromlist=["RawRecord"]).RawRecord(
         external_id=r.external_id or "", url=r.url, payload=r.payload,
         captured_at=r.captured_at) for r in records]

@@ -46,7 +46,7 @@ def dashboard(user=Depends(require_permission("analytics:read")), db: Session = 
             return 0
         return db.execute(
             select(func.count()).select_from(Ticket).where(
-                Ticket.status_id.in_(ids), Ticket.is_archived.is_(False)
+                Ticket.status_id.in_(ids), Ticket.is_archived == False
             )
         ).scalar_one()
 
@@ -57,11 +57,11 @@ def dashboard(user=Depends(require_permission("analytics:read")), db: Session = 
     new_24h = db.execute(
         select(func.count()).select_from(Ticket)
         .where(Ticket.created_at >= now - timedelta(hours=24),
-               Ticket.is_archived.is_(False))
+               Ticket.is_archived == False)
     ).scalar_one()
     verified = db.execute(
         select(func.count()).select_from(Ticket).where(
-            Ticket.verification_status == "VERIFIED", Ticket.is_archived.is_(False))
+            Ticket.verification_status == "VERIFIED", Ticket.is_archived == False)
     ).scalar_one()
     avg_lead = db.execute(select(func.avg(Ticket.lead_score))).scalar() or 0
 

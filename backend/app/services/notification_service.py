@@ -71,6 +71,6 @@ def unread_count(db: Session, user_id: str) -> int:
 
     return db.execute(
         select(func.count()).select_from(Notification).where(
-            Notification.user_id == user_id, Notification.is_read.is_(False)
+            Notification.user_id == user_id, Notification.is_read == False
         )
     ).scalar_one()

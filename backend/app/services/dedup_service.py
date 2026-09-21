@@ -66,7 +66,7 @@ def check_duplicates(db: Session, ticket: Ticket) -> DedupResult:
     candidates = db.execute(
         select(Ticket)
         .options(joinedload(Ticket.type))
-        .where(Ticket.id != ticket.id, Ticket.is_archived.is_(False))
+        .where(Ticket.id != ticket.id, Ticket.is_archived == False)
     ).scalars().all()
 
     for cand in candidates:

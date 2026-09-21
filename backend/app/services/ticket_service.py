@@ -152,7 +152,7 @@ def create_ticket(
         discovered_at=data.get("discovered_at") or now,
         published_at=data.get("published_at"),
         discovered_by=data.get("discovered_by") or "manual",
-        owner_id=data.get("owner_id") or actor_id,
+        owner_id=data.get("owner_id") or (actor_id if actor_type == "user" else None),
         notes=data.get("notes"),
         last_activity_at=now,
     )
@@ -236,7 +236,7 @@ def list_tickets(
     q: str | None = None,
     sort: str = "-created_at",
 ) -> tuple[list[Ticket], int]:
-    filters = [Ticket.is_archived.is_(False)]
+    filters = [Ticket.is_archived == False]
     if status:
         filters.append(
             Ticket.status_id.in_(
@@ -390,7 +390,7 @@ def refresh_freshness(db: Session, *, stale_hours: int = 168, aging_hours: int =
     """Mark tickets FRESH/AGING/STALE by discovery age. Returns count changed."""
     now = datetime.now(timezone.utc)
     changed = 0
-    for ticket in db.execute(select(Ticket).where(Ticket.is_archived.is_(False))).scalars():
+    for ticket in db.execute(select(Ticket).where(Ticket.is_archived == False)).scalars():
         if ticket.discovered_at is None:
             continue
         age_h = (now - ticket.discovered_at.replace(tzinfo=timezone.utc)).total_seconds() / 3600

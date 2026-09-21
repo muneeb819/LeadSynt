@@ -84,7 +84,7 @@ def list_templates(
 ):
     q = select(OutreachTemplate).order_by(OutreachTemplate.name)
     if active_only:
-        q = q.where(OutreachTemplate.is_active.is_(True))
+        q = q.where(OutreachTemplate.is_active == True)
     rows = db.execute(q).scalars().all()
     return Envelope(data=[_template_out(t) for t in rows])
 

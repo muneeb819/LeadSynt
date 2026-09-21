@@ -81,7 +81,7 @@ def run_qa_sweep(db: Session, *, trigger: str = "manual", actor_id: str | None =
             Ticket.status_id.in_(active_ids),
             Ticket.discovered_at.isnot(None),
             Ticket.discovered_at < stale_before,
-            Ticket.is_archived.is_(False),
+            Ticket.is_archived == False,
         )
     ).scalars().all()
     if stale:
@@ -102,7 +102,7 @@ def run_qa_sweep(db: Session, *, trigger: str = "manual", actor_id: str | None =
     dups = db.execute(
         select(Ticket).where(
             Ticket.duplicate_status.in_([DuplicateStatus.POSSIBLE_DUPLICATE, DuplicateStatus.DUPLICATE]),
-            Ticket.is_archived.is_(False),
+            Ticket.is_archived == False,
         )
     ).scalars().all()
     if dups:
@@ -124,7 +124,7 @@ def run_qa_sweep(db: Session, *, trigger: str = "manual", actor_id: str | None =
     # 3. Verification failures -----------------------------------------------------
     failed_ver = db.execute(
         select(Ticket).where(Ticket.verification_status == VerificationStatus.FAILED,
-                             Ticket.is_archived.is_(False))
+                             Ticket.is_archived == False)
     ).scalars().all()
     if failed_ver:
         _add_finding(
@@ -216,7 +216,7 @@ def run_qa_sweep(db: Session, *, trigger: str = "manual", actor_id: str | None =
                 sid for sid, code in db.execute(select(TicketStatusRow.id, TicketStatusRow.code)).all()
                 if code in (TicketStatus.PROCESSING.value, TicketStatus.VERIFIED.value, TicketStatus.QUALIFIED.value)
             ]),
-            Ticket.is_archived.is_(False),
+            Ticket.is_archived == False,
         )
     ).scalars().all()
     if unscored:
@@ -239,7 +239,7 @@ def run_qa_sweep(db: Session, *, trigger: str = "manual", actor_id: str | None =
                 TicketStatus.REPLIED.value, TicketStatus.HOT_LEAD.value,
                 TicketStatus.OUTREACH_ACTIVE.value,
             })),
-            Ticket.is_archived.is_(False),
+            Ticket.is_archived == False,
         )
     ).scalars().all()
     if ownerless:
