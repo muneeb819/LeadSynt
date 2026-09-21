@@ -9,6 +9,7 @@ Beat schedule (foundation):
 - connectors.run_dev_feed every 6 hours
 - tickets.refresh_freshness daily
 - jobs.health_check       every 15 minutes
+- outreach.send_due       every 5 minutes
 """
 
 from __future__ import annotations
@@ -50,6 +51,10 @@ celery.conf.update(
         "jobs-health-check": {
             "task": "leadsynt.health.check",
             "schedule": 15 * 60.0,
+        },
+        "outreach-send-due": {
+            "task": "leadsynt.outreach.send_due",
+            "schedule": 5 * 60.0,
         },
     },
 )
